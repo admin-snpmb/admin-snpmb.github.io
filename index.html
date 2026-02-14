@@ -13,13 +13,18 @@
 
         body {
             font-family: 'Georgia', serif;
-            background: #000;
+            background: #ff6868;
             color: #fff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            transition: background 1.5s ease-in-out;
+        }
+
+        body.light-mode {
+            background: #d4d4d4;
         }
 
         .game-container {
@@ -75,6 +80,28 @@
             transition: opacity 0.5s;
         }
 
+        .card.zoom-out {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: zoomToFullScreen 1.5s ease-in-out forwards;
+            z-index: 999;
+        }
+
+        @keyframes zoomToFullScreen {
+            0% {
+                width: 70px;
+                height: 70px;
+                border-radius: 8px;
+            }
+            100% {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+            }
+        }
+
         .card-front, .card-back {
             position: absolute;
             width: 100%;
@@ -96,14 +123,13 @@
             background-position: center;
         }
 
-        /* Congratulations Screen */
         .congrats-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000;
+            background: #d4d4d4;
             display: none;
             justify-content: center;
             align-items: center;
@@ -121,6 +147,7 @@
             letter-spacing: 3px;
             text-transform: uppercase;
             opacity: 0;
+            color: #333;
         }
 
         .congrats-text.animate {
@@ -132,6 +159,7 @@
             font-weight: 300;
             letter-spacing: 2px;
             opacity: 0;
+            color: #333;
         }
 
         .surprise-text.animate {
@@ -150,14 +178,13 @@
             100% { opacity: 0; transform: scale(0.9); }
         }
 
-        /* Envelope Screen */
         .envelope-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000;
+            background: #d4d4d4;
             display: none;
             justify-content: center;
             align-items: center;
@@ -223,7 +250,7 @@
             left: 50%;
             transform: translateX(-50%);
             font-size: 1.2rem;
-            color: #d4a574;
+            color: #8b6f47;
             animation: pulse 2s infinite;
         }
 
@@ -232,14 +259,13 @@
             50% { opacity: 1; }
         }
 
-        /* Letter Screen */
         .letter-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000;
+            background: #d4d4d4;
             display: none;
             justify-content: center;
             align-items: center;
@@ -276,7 +302,6 @@
             }
         }
 
-        /* Grid Layout for heart shape */
         .grid {
             grid-template-areas:
                 ". a1 a2 . a3 a4 ."
@@ -326,6 +351,19 @@
                 height: 50px;
             }
 
+            @keyframes zoomToFullScreen {
+                0% {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 8px;
+                }
+                100% {
+                    width: 100vw;
+                    height: 100vh;
+                    border-radius: 0;
+                }
+            }
+
             .instructions {
                 font-size: 1.2rem;
             }
@@ -354,40 +392,34 @@
         <div class="grid" id="gameGrid"></div>
     </div>
 
-    <!-- Congratulations Screen -->
     <div class="congrats-screen" id="congratsScreen">
         <div class="congrats-text" id="congratsText">Congratulations!</div>
     </div>
 
-    <!-- Surprise Text Screen -->
     <div class="congrats-screen" id="surpriseScreen">
         <div class="surprise-text" id="surpriseText">I have sumthin for u</div>
     </div>
 
-    <!-- Envelope Screen -->
     <div class="envelope-screen" id="envelopeScreen">
         <div class="envelope-container" id="envelopeContainer">
             <div class="envelope">
                 <div class="envelope-flap"></div>
-                <div class="envelope-heart">💌</div>
+                <div class="envelope-heart">❤︎</div>
             </div>
             <div class="click-hint">Click to open</div>
         </div>
     </div>
 
-    <!-- Letter Screen -->
     <div class="letter-screen" id="letterScreen">
         <div class="letter-container">
-            <!-- Ganti URL ini dengan URL gambar surat valentine kamu -->
-            <img src="https://via.placeholder.com/600x800/fff/000?text=Your+Valentine+Letter+Here" 
+            <img src="Letter.png" 
                  alt="Valentine Letter" 
                  class="letter-image">
         </div>
     </div>
 
     <script>
-        // Card data - 13 pairs (26 cards) + 1 filler card = 27 total for heart shape
-        // Ganti URL foto untuk tiap pair (13 foto berbeda)
+
         const photo1 = '01.jpeg';
         const photo2 = '02.jpeg';
         const photo3 = '11.jpeg';
@@ -450,7 +482,7 @@
         const totalPairs = 13;
         let canFlip = true;
 
-        // Create grid
+        // buat grid
         const gameGrid = document.getElementById('gameGrid');
         shuffledCards.forEach(card => {
             const cardElement = document.createElement('div');
@@ -488,7 +520,7 @@
             const [first, second] = flippedCards;
 
             if (first.card.pairId === second.card.pairId) {
-                // Match found
+                // match found
                 setTimeout(() => {
                     first.element.classList.add('matched');
                     second.element.classList.add('matched');
@@ -502,7 +534,7 @@
                     canFlip = true;
                 }, 500);
             } else {
-                // No match
+               
                 setTimeout(() => {
                     first.element.classList.remove('flipped');
                     second.element.classList.remove('flipped');
@@ -513,21 +545,36 @@
         }
 
         function showCongratulations() {
-            const gameContainer = document.querySelector('.game-container');
-            const congratsScreen = document.getElementById('congratsScreen');
-            const congratsText = document.getElementById('congratsText');
+            const cards = document.querySelectorAll('.card');
+            let emptyCard = null;
             
-            gameContainer.style.opacity = '0';
+            cards.forEach((cardElement) => {
+                if (cardElement.dataset.pairId === 'null') {
+                    emptyCard = cardElement;
+                }
+            });
             
-            setTimeout(() => {
-                congratsScreen.classList.add('show');
-                congratsText.classList.add('animate');
+            if (emptyCard) {
+                document.body.classList.add('light-mode');
+                
+                emptyCard.classList.add('zoom-out');
                 
                 setTimeout(() => {
-                    congratsScreen.classList.remove('show');
-                    showSurprise();
-                }, 3000);
-            }, 500);
+                    const gameContainer = document.querySelector('.game-container');
+                    gameContainer.style.display = 'none';
+                    
+                    const congratsScreen = document.getElementById('congratsScreen');
+                    const congratsText = document.getElementById('congratsText');
+                    
+                    congratsScreen.classList.add('show');
+                    congratsText.classList.add('animate');
+                    
+                    setTimeout(() => {
+                        congratsScreen.classList.remove('show');
+                        showSurprise();
+                    }, 3000);
+                }, 1500); 
+            }
         }
 
         function showSurprise() {
