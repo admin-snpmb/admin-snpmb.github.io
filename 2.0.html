@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match the Photo Pairs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .instructions {
+            display: flex;
+            justify-content: space-between;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            font-size: 1.8rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .instructions-left {
+            text-align: left;
+        }
+
+        .instructions-right {
+            text-align: right;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(7, 70px);
+            gap: 8px;
+            justify-content: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            width: 70px;
+            height: 70px;
+            background: #d4d4d4;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.4s;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-front {
+            background: #d4d4d4;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Congratulations Screen */
+        .congrats-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .congrats-screen.show {
+            display: flex;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .congrats-text {
+            font-size: 4rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0;
+        }
+
+        .congrats-text.animate {
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        .surprise-text {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            opacity: 0;
+        }
+
+        .surprise-text.animate {
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: scale(0.9); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+
+        /* Envelope Screen */
+        .envelope-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .envelope-screen.show {
+            display: flex;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .envelope-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .envelope-container:hover {
+            transform: scale(1.05);
+        }
+
+        .envelope {
+            width: 300px;
+            height: 200px;
+            background: #f4e4d7;
+            border: 3px solid #d4a574;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #e8d4c0;
+            border: 3px solid #d4a574;
+            border-radius: 10px;
+            transform-origin: top center;
+            transition: transform 0.8s ease-in-out;
+            clip-path: polygon(0 0, 50% 60%, 100% 0);
+            z-index: 2;
+        }
+
+        .envelope-container.opened .envelope-flap {
+            transform: rotateX(-180deg);
+        }
+
+        .envelope-heart {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            z-index: 1;
+        }
+
+        .click-hint {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            color: #d4a574;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Letter Screen */
+        .letter-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+            opacity: 0;
+        }
+
+        .letter-screen.show {
+            display: flex;
+            animation: fadeIn 1s ease-in forwards;
+        }
+
+        .letter-container {
+            max-width: 90%;
+            max-height: 90%;
+            animation: slideUp 1s ease-out;
+        }
+
+        .letter-image {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(212, 165, 116, 0.3);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Grid Layout for heart shape with 13 cards */
+        .grid {
+            grid-template-areas:
+                ". a1 a2 . a3 a4 ."
+                "b1 b2 b3 b4 b5 b6 b7"
+                ". c1 c2 c3 c4 c5 ."
+                ". . . d1 . . .";
+        }
+
+        .card:nth-child(1) { grid-area: a1; }
+        .card:nth-child(2) { grid-area: a2; }
+        .card:nth-child(3) { grid-area: a3; }
+        .card:nth-child(4) { grid-area: a4; }
+        .card:nth-child(5) { grid-area: b2; }
+        .card:nth-child(6) { grid-area: b3; }
+        .card:nth-child(7) { grid-area: b4; }
+        .card:nth-child(8) { grid-area: b5; }
+        .card:nth-child(9) { grid-area: b6; }
+        .card:nth-child(10) { grid-area: c2; }
+        .card:nth-child(11) { grid-area: c3; }
+        .card:nth-child(12) { grid-area: c4; }
+        .card:nth-child(13) { grid-area: d1; }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: repeat(7, 50px);
+                gap: 6px;
+            }
+
+            .card {
+                width: 50px;
+                height: 50px;
+            }
+
+            .instructions {
+                font-size: 1.2rem;
+            }
+
+            .congrats-text {
+                font-size: 2.5rem;
+            }
+
+            .surprise-text {
+                font-size: 2rem;
+            }
+
+            .envelope {
+                width: 240px;
+                height: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="instructions">
+            <div class="instructions-left">Match<br>the photo pairs</div>
+            <div class="instructions-right">to reveal<br>the surprise</div>
+        </div>
+        <div class="grid" id="gameGrid"></div>
+    </div>
+
+    <!-- Congratulations Screen -->
+    <div class="congrats-screen" id="congratsScreen">
+        <div class="congrats-text" id="congratsText">Congratulations!</div>
+    </div>
+
+    <!-- Surprise Text Screen -->
+    <div class="congrats-screen" id="surpriseScreen">
+        <div class="surprise-text" id="surpriseText">I have sumthin for u</div>
+    </div>
+
+    <!-- Envelope Screen -->
+    <div class="envelope-screen" id="envelopeScreen">
+        <div class="envelope-container" id="envelopeContainer">
+            <div class="envelope">
+                <div class="envelope-flap"></div>
+                <div class="envelope-heart">💌</div>
+            </div>
+            <div class="click-hint">Click to open</div>
+        </div>
+    </div>
+
+    <!-- Letter Screen -->
+    <div class="letter-screen" id="letterScreen">
+        <div class="letter-container">
+            <!-- Ganti URL ini dengan URL gambar surat valentine kamu -->
+            <img src="https://via.placeholder.com/600x800/fff/000?text=Your+Valentine+Letter+Here" 
+                 alt="Valentine Letter" 
+                 class="letter-image">
+        </div>
+    </div>
+
+    <script>
+        // Card data - 3 pairs (6 cards) + 7 filler cards = 13 total for heart shape
+        // Ganti URL foto untuk tiap pair
+        const photo1 = 'https://via.placeholder.com/70x70/ff1493/fff?text=Photo+1'; // Pair 1
+        const photo2 = 'https://via.placeholder.com/70x70/ff69b4/fff?text=Photo+2'; // Pair 2
+        const photo3 = 'https://via.placeholder.com/70x70/ff85c1/fff?text=Photo+3'; // Pair 3
+        
+        const cardData = [
+            { id: 1, pairId: 1, image: photo1 },
+            { id: 2, pairId: 1, image: photo1 },
+            { id: 3, pairId: 2, image: photo2 },
+            { id: 4, pairId: 2, image: photo2 },
+            { id: 5, pairId: 3, image: photo3 },
+            { id: 6, pairId: 3, image: photo3 },
+            // Filler cards (no pair)
+            ...Array.from({ length: 7 }, (_, i) => ({ id: i + 7, pairId: null, image: null }))
+        ];
+
+        // Shuffle cards
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        const shuffledCards = shuffle([...cardData]);
+
+        // Game state
+        let flippedCards = [];
+        let matchedPairs = 0;
+        const totalPairs = 3;
+        let canFlip = true;
+
+        // Create grid
+        const gameGrid = document.getElementById('gameGrid');
+        shuffledCards.forEach(card => {
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card';
+            cardElement.dataset.id = card.id;
+            cardElement.dataset.pairId = card.pairId;
+            
+            cardElement.innerHTML = `
+                <div class="card-front"></div>
+                <div class="card-back" style="background-image: url('${card.image || ''}')"></div>
+            `;
+            
+            if (card.pairId !== null) {
+                cardElement.addEventListener('click', () => flipCard(cardElement, card));
+            }
+            
+            gameGrid.appendChild(cardElement);
+        });
+
+        function flipCard(cardElement, card) {
+            if (!canFlip || cardElement.classList.contains('flipped') || cardElement.classList.contains('matched')) {
+                return;
+            }
+
+            cardElement.classList.add('flipped');
+            flippedCards.push({ element: cardElement, card });
+
+            if (flippedCards.length === 2) {
+                canFlip = false;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [first, second] = flippedCards;
+
+            if (first.card.pairId === second.card.pairId) {
+                // Match found
+                setTimeout(() => {
+                    first.element.classList.add('matched');
+                    second.element.classList.add('matched');
+                    matchedPairs++;
+                    
+                    if (matchedPairs === totalPairs) {
+                        setTimeout(showCongratulations, 500);
+                    }
+                    
+                    flippedCards = [];
+                    canFlip = true;
+                }, 500);
+            } else {
+                // No match
+                setTimeout(() => {
+                    first.element.classList.remove('flipped');
+                    second.element.classList.remove('flipped');
+                    flippedCards = [];
+                    canFlip = true;
+                }, 1000);
+            }
+        }
+
+        function showCongratulations() {
+            const gameContainer = document.querySelector('.game-container');
+            const congratsScreen = document.getElementById('congratsScreen');
+            const congratsText = document.getElementById('congratsText');
+            
+            gameContainer.style.opacity = '0';
+            
+            setTimeout(() => {
+                congratsScreen.classList.add('show');
+                congratsText.classList.add('animate');
+                
+                setTimeout(() => {
+                    congratsScreen.classList.remove('show');
+                    showSurprise();
+                }, 3000);
+            }, 500);
+        }
+
+        function showSurprise() {
+            const surpriseScreen = document.getElementById('surpriseScreen');
+            const surpriseText = document.getElementById('surpriseText');
+            
+            surpriseScreen.classList.add('show');
+            surpriseText.classList.add('animate');
+            
+            setTimeout(() => {
+                surpriseScreen.classList.remove('show');
+                showEnvelope();
+            }, 3000);
+        }
+
+        function showEnvelope() {
+            const envelopeScreen = document.getElementById('envelopeScreen');
+            const envelopeContainer = document.getElementById('envelopeContainer');
+            
+            envelopeScreen.classList.add('show');
+            
+            envelopeContainer.addEventListener('click', openEnvelope);
+        }
+
+        function openEnvelope() {
+            const envelopeContainer = document.getElementById('envelopeContainer');
+            envelopeContainer.classList.add('opened');
+            
+            setTimeout(() => {
+                const envelopeScreen = document.getElementById('envelopeScreen');
+                const letterScreen = document.getElementById('letterScreen');
+                
+                envelopeScreen.style.display = 'none';
+                letterScreen.classList.add('show');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
