@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Match the Photo Pairs</title>
     <style>
         * {
@@ -16,11 +16,13 @@
             background: #ff6868;
             color: #fff;
             min-height: 100vh;
+            width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
             transition: background 1.5s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body.light-mode {
@@ -30,6 +32,7 @@
         .game-container {
             text-align: center;
             padding: 20px;
+            width: 100%;
         }
 
         .instructions {
@@ -68,6 +71,7 @@
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.4s;
+            touch-action: manipulation;
         }
 
         .card.flipped {
@@ -340,6 +344,7 @@
         .card:nth-child(26) { grid-area: e3; }
         .card:nth-child(27) { grid-area: f1; }
 
+        /* responsif mobile */
         @media (max-width: 600px) {
             .grid {
                 grid-template-columns: repeat(7, 50px);
@@ -366,19 +371,183 @@
 
             .instructions {
                 font-size: 1.2rem;
+                max-width: 90%;
+                margin: 0 auto 30px;
             }
 
             .congrats-text {
-                font-size: 2.5rem;
+                font-size: 2rem;
+                padding: 0 20px;
+                text-align: center;
             }
 
             .surprise-text {
-                font-size: 2rem;
+                font-size: 1.5rem;
+                padding: 0 20px;
+                text-align: center;
             }
 
             .envelope {
                 width: 240px;
                 height: 160px;
+            }
+
+            .envelope-heart {
+                font-size: 3rem;
+            }
+
+            .click-hint {
+                font-size: 1rem;
+                bottom: -40px;
+            }
+
+            .letter-container {
+                max-width: 95%;
+                max-height: 85%;
+            }
+
+            .letter-image {
+                max-height: 85vh;
+            }
+
+            .game-container {
+                padding: 15px;
+            }
+        }
+
+        @media (min-width: 601px) and (max-width: 900px) {
+            .grid {
+                grid-template-columns: repeat(7, 60px);
+                gap: 7px;
+            }
+
+            .card {
+                width: 60px;
+                height: 60px;
+            }
+
+            @keyframes zoomToFullScreen {
+                0% {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 8px;
+                }
+                100% {
+                    width: 100vw;
+                    height: 100vh;
+                    border-radius: 0;
+                }
+            }
+
+            .instructions {
+                font-size: 1.5rem;
+            }
+
+            .congrats-text {
+                font-size: 3rem;
+            }
+
+            .surprise-text {
+                font-size: 2.2rem;
+            }
+
+            .envelope {
+                width: 270px;
+                height: 180px;
+            }
+        }
+
+
+        @media (max-height: 700px) and (orientation: landscape) {
+            .grid {
+                grid-template-columns: repeat(7, 45px);
+                gap: 5px;
+            }
+
+            .card {
+                width: 45px;
+                height: 45px;
+            }
+
+            .instructions {
+                font-size: 1rem;
+                margin-bottom: 20px;
+            }
+
+            .game-container {
+                padding: 10px;
+            }
+
+            .congrats-text {
+                font-size: 2rem;
+            }
+
+            .surprise-text {
+                font-size: 1.5rem;
+            }
+
+            .envelope {
+                width: 200px;
+                height: 140px;
+            }
+
+            .envelope-heart {
+                font-size: 2.5rem;
+            }
+
+            .click-hint {
+                font-size: 0.9rem;
+                bottom: -35px;
+            }
+
+            @keyframes zoomToFullScreen {
+                0% {
+                    width: 45px;
+                    height: 45px;
+                    border-radius: 8px;
+                }
+                100% {
+                    width: 100vw;
+                    height: 100vh;
+                    border-radius: 0;
+                }
+            }
+        }
+
+        @media (max-width: 375px) {
+            .grid {
+                grid-template-columns: repeat(7, 42px);
+                gap: 5px;
+            }
+
+            .card {
+                width: 42px;
+                height: 42px;
+            }
+
+            .instructions {
+                font-size: 1rem;
+            }
+
+            .congrats-text {
+                font-size: 1.8rem;
+            }
+
+            .surprise-text {
+                font-size: 1.3rem;
+            }
+
+            @keyframes zoomToFullScreen {
+                0% {
+                    width: 42px;
+                    height: 42px;
+                    border-radius: 8px;
+                }
+                100% {
+                    width: 100vw;
+                    height: 100vh;
+                    border-radius: 0;
+                }
             }
         }
     </style>
@@ -419,7 +588,6 @@
     </div>
 
     <script>
-
         const photo1 = '01.jpeg';
         const photo2 = '02.jpeg';
         const photo3 = '11.jpeg';
@@ -461,11 +629,9 @@
             { id: 24, pairId: 12, image: photo12 },
             { id: 25, pairId: 13, image: photo13 },
             { id: 26, pairId: 13, image: photo13 },
-            // 1 filler card (no pair) - kotak kosong
             { id: 27, pairId: null, image: null }
         ];
 
-        // Shuffle cards
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -476,13 +642,11 @@
 
         const shuffledCards = shuffle([...cardData]);
 
-        // Game state
         let flippedCards = [];
         let matchedPairs = 0;
         const totalPairs = 13;
         let canFlip = true;
 
-        // buat grid
         const gameGrid = document.getElementById('gameGrid');
         shuffledCards.forEach(card => {
             const cardElement = document.createElement('div');
@@ -520,7 +684,6 @@
             const [first, second] = flippedCards;
 
             if (first.card.pairId === second.card.pairId) {
-                // match found
                 setTimeout(() => {
                     first.element.classList.add('matched');
                     second.element.classList.add('matched');
@@ -534,7 +697,6 @@
                     canFlip = true;
                 }, 500);
             } else {
-               
                 setTimeout(() => {
                     first.element.classList.remove('flipped');
                     second.element.classList.remove('flipped');
@@ -556,7 +718,6 @@
             
             if (emptyCard) {
                 document.body.classList.add('light-mode');
-                
                 emptyCard.classList.add('zoom-out');
                 
                 setTimeout(() => {
@@ -573,7 +734,7 @@
                         congratsScreen.classList.remove('show');
                         showSurprise();
                     }, 3000);
-                }, 1500); 
+                }, 1500);
             }
         }
 
